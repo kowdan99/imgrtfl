@@ -6,6 +6,7 @@ import reportWebVitals from "./reportWebVitals"
 import * as serviceWorker from "./serviceWorker"
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import  SignUp from "./pages/SignUp";
+import Journal from "./pages/Journal"
 
 const container = document.getElementById("root")
 if (!container) throw new Error('Failed to find the root element');
@@ -19,6 +20,10 @@ const router = createBrowserRouter([
   {
     path: '/signup',
     element: <SignUp />,
+  },
+  {
+    path: '/journal',
+    element: <Journal />,
   },
 ]);
 root.render(

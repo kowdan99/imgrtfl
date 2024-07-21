@@ -12,8 +12,6 @@ import theme from './pages/theme'
 import '@fontsource/inter/900.css';
 import { Link } from 'react-router-dom';
 
-
-
 export const App = () => (
   <ChakraProvider theme={theme}>
     <Box
