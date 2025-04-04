@@ -1,0 +1,9 @@
+fastapi==0.104.1
+uvicorn==0.23.2
+sqlalchemy==2.0.22
+pydantic==2.4.2
+psycopg2-binary==2.9.9
+python-dotenv==1.0.0
+twilio==8.9.1
+anthropic==0.8.0
+apscheduler==3.10.4

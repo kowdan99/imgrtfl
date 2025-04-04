@@ -1,0 +1,3 @@
+export default {
+    VITE_CLERK_PUBLISHABLE_KEY: process.env.REACT_APP_VITE_CLERK_PUBLISHABLE_KEY
+};
