@@ -1,40 +1,32 @@
-import React, { useEffect } from "react";
-import { Box, Text, VStack } from "@chakra-ui/react";
-import { SignUp, useUser } from "@clerk/clerk-react";
-import { useNavigate } from "react-router-dom";
-
-const SignUpPage = () => {
-  const { user, isLoaded, isSignedIn } = useUser(); // must be inside the component
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (isLoaded && isSignedIn && user) {
-      navigate("/onboarding");
-    }
-  }, [isLoaded, isSignedIn, user, navigate]);
-
+// pages/Login.tsx
+import React from 'react'
+import { SignIn } from '@clerk/clerk-react'
+import {
+    ChakraProvider,
+    Box,
+    Button,
+    Heading,
+    Text,
+    VStack,
+    Grid,
+    Input
+    // theme,
+} from "@chakra-ui/react"
+import theme from './theme'
+export {}
+const LoginPage = () => {
   return (
-    <Box
-      w="100%"
-      h="100vh"
-      bgGradient="linear(to-r, gray.300, yellow.400, pink.200)"
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-    >
-      <VStack spacing={6}>
-        <Text fontSize="4xl" color="black">
-          i'm grtfl :)
-        </Text>
-        <Text fontSize="xl" color="black">
-          A step closer to gratitude
-        </Text>
-        <SignUp
-          path="/signup"
-          routing="path"
-          signInUrl="/login"
-          afterSignUpUrl="/onboarding"
-          appearance={{
+
+            <Box
+            w='100%'
+            h='1000px'
+            bgGradient='linear(to-r, gray.300, yellow.400, pink.200)'
+             > 
+                    <VStack spacing={50}>
+                    <Text fontSize='4xl' color={"black"}>i'm grtfl :) </Text>
+                    <Text fontSize='2xl' color={"black"}>A step closer to gratitude </Text>
+                    <Grid minH="100vh" p={3}>
+                    <SignIn path="/login" routing="path" signUpUrl="/signup" redirectUrl="/gratitude" appearance={{
             elements: {
               card: {
                 background: "rgba(255, 255, 255, 0.2)",
@@ -67,11 +59,11 @@ const SignUpPage = () => {
               fontSize: "16px",
               borderRadius: "20px",
             },
-          }}
-        />
-      </VStack>
-    </Box>
-  );
-};
+          }} />
+                    </Grid>
+                    </VStack>
+            </Box>
+  )
+}
 
-export default SignUpPage;
+export default LoginPage
