@@ -74,7 +74,6 @@ const OnboardingForm = ({ onSubmit }: { onSubmit: (data: any) => void }) => {
               if (!user) return;
 
               const payload = {
-                clerk_user_id: user.id,
                 name: values.name || "", // optional fallback
                 email: user.primaryEmailAddress?.emailAddress,
                 phone_number: values.phone,

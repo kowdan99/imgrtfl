@@ -26,7 +26,7 @@ const LoginPage = () => {
                     <Text fontSize='4xl' color={"black"}>i'm grtfl :) </Text>
                     <Text fontSize='2xl' color={"black"}>A step closer to gratitude </Text>
                     <Grid minH="100vh" p={3}>
-                    <SignIn path="/login" routing="path" signUpUrl="/signup" redirectUrl="/gratitude" appearance={{
+                    <SignIn path="/login" routing="path" signUpUrl="/signup" forceRedirectUrl="/gratitude" appearance={{
             elements: {
               card: {
                 background: "rgba(255, 255, 255, 0.2)",

@@ -4,8 +4,8 @@ import '@fontsource/poppins/600.css';
 
 const theme = extendTheme({
   fonts: {
-    heading: 'Poppins, sans-serif',
-    body: 'Poppins, sans-serif',
+    heading: `'Geist', sans-serif`,
+    body: `'Geist', sans-serif`,
   },
 });
 

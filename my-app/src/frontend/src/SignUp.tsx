@@ -33,7 +33,7 @@ const SignUpPage = () => {
           path="/signup"
           routing="path"
           signInUrl="/login"
-          afterSignUpUrl="/onboarding"
+          forceRedirectUrl="/onboarding"
           appearance={{
             elements: {
               card: {

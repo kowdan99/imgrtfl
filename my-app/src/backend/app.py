@@ -66,7 +66,6 @@ class GratitudeEntryResponse(BaseModel):
         orm_mode = True
 
 class UserCreate(BaseModel):
-    clerk_user_id: str
     name: str
     email: str
     phone_number: str
