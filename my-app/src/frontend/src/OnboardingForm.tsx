@@ -4,32 +4,32 @@ import {
   FormControl,
   FormLabel,
   Input,
-  Textarea,
-  FormErrorMessage,
   VStack,
   Heading,
   Text,
   RadioGroup,
   Radio,
   Stack,
+  FormErrorMessage,
+  useToast,
 } from "@chakra-ui/react";
 import { Formik, Field, Form } from "formik";
 import * as Yup from "yup";
+import { useUser, useAuth } from "@clerk/clerk-react";
+import axios from "axios";
 
 interface FormValues {
-  email: string;
   phone: string;
-  entry: string;
-  useLLM: string; // we'll use "yes" | "no" for better clarity in radios
+  useLLM: string; // "yes" or "no"
 }
 
-const OnboardingForm = ({
-  email,
-  onSubmit,
-}: {
-  email: string;
-  onSubmit: (data: FormValues) => void;
-}) => {
+const OnboardingForm = ({ onSubmit }: { onSubmit: (data: any) => void }) => {
+  const { user } = useUser();
+  const { getToken } = useAuth();
+  const toast = useToast();
+
+  const backendUrl = process.env.VITE_BACKEND_URL || "http://localhost:8000";
+
   return (
     <Box
       w="100%"
@@ -59,30 +59,73 @@ const OnboardingForm = ({
 
           <Formik
             initialValues={{
-              email: email,
+              name: "",
               phone: "",
-              entry: "",
-              useLLM: "yes", // default to yes
+              useLLM: "yes",
             }}
             validationSchema={Yup.object({
+              name: Yup.string().required("Name is required"),
               phone: Yup.string()
                 .required("Phone number is required")
                 .matches(/^\+?[1-9]\d{1,14}$/, "Invalid phone number"),
-              entry: Yup.string().required("Please write at least one entry"),
               useLLM: Yup.string().required("Please choose an option"),
             })}
-            onSubmit={(values, actions) => {
-              onSubmit(values);
-              actions.setSubmitting(false);
+            onSubmit={async (values, actions) => {
+              if (!user) return;
+
+              const payload = {
+                clerk_user_id: user.id,
+                name: values.name || "", // optional fallback
+                email: user.primaryEmailAddress?.emailAddress,
+                phone_number: values.phone,
+                use_llm_reminders: values.useLLM === "yes",
+              };
+
+              try {
+                const token = await getToken();
+                await axios.post(`${backendUrl}/api/users/`, payload, {
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                });
+
+                toast({
+                  title: "Profile saved!",
+                  status: "success",
+                  duration: 3000,
+                  isClosable: true,
+                });
+
+                onSubmit(payload);
+              } catch (err) {
+                console.error("Failed to create user:", err);
+                toast({
+                  title: "Error saving profile",
+                  status: "error",
+                  duration: 3000,
+                  isClosable: true,
+                });
+              } finally {
+                actions.setSubmitting(false);
+              }
             }}
           >
             {(props) => (
               <Form>
                 <VStack spacing={4} align="stretch">
-                  <FormControl>
-                    <FormLabel color="gray.800">Email</FormLabel>
-                    <Input value={email} isReadOnly bg="whiteAlpha.800" />
-                  </FormControl>
+                <Field name="name">
+                  {({ field, form }: { field: any; form: any }) => (
+                    <FormControl isInvalid={form.errors.name && form.touched.name}>
+                      <FormLabel color="gray.800">Your Name</FormLabel>
+                      <Input
+                        {...field}
+                        placeholder="e.g. Yousef"
+                        bg="whiteAlpha.800"
+                      />
+                      <FormErrorMessage>{form.errors.name}</FormErrorMessage>
+                    </FormControl>
+                  )}
+                </Field>
 
                   <Field name="phone">
                     {({ field, form }: { field: any; form: any }) => (
@@ -100,31 +143,17 @@ const OnboardingForm = ({
                     )}
                   </Field>
 
-                  <Field name="entry">
-                    {({ field, form }: { field: any; form: any }) => (
-                      <FormControl
-                        isInvalid={form.errors.entry && form.touched.entry}
-                      >
-                        <FormLabel color="gray.800">
-                          First Gratitude Entry
-                        </FormLabel>
-                        <Textarea
-                          {...field}
-                          placeholder="I'm grateful for..."
-                          bg="whiteAlpha.800"
-                        />
-                        <FormErrorMessage>{form.errors.entry}</FormErrorMessage>
-                      </FormControl>
-                    )}
-                  </Field>
-
                   <Field name="useLLM">
                     {({ field }: { field: any }) => (
                       <FormControl>
                         <FormLabel color="gray.800">
                           Use AI to enhance your entries?
                         </FormLabel>
-                        <RadioGroup {...field} onChange={field.onChange(field.name)} value={field.value}>
+                        <RadioGroup
+                          {...field}
+                          onChange={field.onChange(field.name)}
+                          value={field.value}
+                        >
                           <Stack direction="row">
                             <Radio value="yes">Yes</Radio>
                             <Radio value="no">No</Radio>

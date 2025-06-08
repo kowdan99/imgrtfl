@@ -4,7 +4,7 @@ import { SignUp, useUser } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 
 const SignUpPage = () => {
-  const { user, isLoaded, isSignedIn } = useUser(); // must be inside the component
+  const { user, isLoaded, isSignedIn } = useUser();
   const navigate = useNavigate();
 
   useEffect(() => {

@@ -20,7 +20,6 @@ const OnboardingPage = () => {
 
   return (
     <OnboardingForm
-      email={user?.primaryEmailAddress?.emailAddress!}
       onSubmit={handleOnboardingSubmit}
     />
   );

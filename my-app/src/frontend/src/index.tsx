@@ -21,7 +21,7 @@ if (!clerkPubKey) {
 }
 
 const withProviders = (component: React.ReactNode) => (
-  <ClerkProvider publishableKey={clerkPubKey}>
+  <ClerkProvider publishableKey={clerkPubKey} >
     <ChakraProvider theme={theme}>{component}</ChakraProvider>
   </ClerkProvider>
 )
