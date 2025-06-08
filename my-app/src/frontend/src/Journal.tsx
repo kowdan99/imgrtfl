@@ -32,7 +32,7 @@ const JournalPage = () => {
     tags?:[string];
     moods?:string
   }>>([]);
-  const backendUrl = process.env.VITE_BACKEND_URL || "http://localhost:8000";
+  const backendUrl = process.env.REACT_APP_BACKEND_URL 
 
 
   const validationSchema = Yup.object({

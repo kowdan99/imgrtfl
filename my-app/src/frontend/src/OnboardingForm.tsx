@@ -28,7 +28,7 @@ const OnboardingForm = ({ onSubmit }: { onSubmit: (data: any) => void }) => {
   const { getToken } = useAuth();
   const toast = useToast();
 
-  const backendUrl = process.env.VITE_BACKEND_URL || "http://localhost:8000";
+  const backendUrl = process.env.REACT_APP_BACKEND_URL 
 
   return (
     <Box

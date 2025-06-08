@@ -104,13 +104,20 @@ def create_user(
     db: Session = Depends(get_db),
     token_payload: dict = Depends(require_user)
 ):
-    clerk_user_id = token_payload["sub"]
+    print("Incoming user_data:", user_data)
+    print("Clerk token payload:", token_payload)
+    try:
+        clerk_user_id = token_payload["sub"]
+    except Exception as e:
+        print("Failed to extract user ID:", e)
+        raise HTTPException(status_code=400, detail="Invalid token")
 
     # Optional: prevent duplicate creation
     #existing = db.query(models.User).filter_by(clerk_user_id=clerk_user_id).first()
     #if existing:
         #raise HTTPException(status_code=400, detail="User already exists")
     if db.query(models.User).filter_by(clerk_user_id=clerk_user_id).first():
+        print("User already exists with ID:", clerk_user_id)
         raise HTTPException(status_code=400, detail="User already exists")
 
     db_user = models.User(
@@ -120,10 +127,11 @@ def create_user(
         phone_number=user_data.phone_number,
         use_llm_reminders=user_data.use_llm_reminders,
     )
-    print("✅ Created DB user with Clerk ID:", clerk_user_id)
+    
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
+    print("Created DB user with Clerk ID:", clerk_user_id)
     return db_user
 
 @app.post("/api/entries/", response_model=GratitudeEntryResponse)
