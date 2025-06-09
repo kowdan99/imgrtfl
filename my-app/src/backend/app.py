@@ -28,7 +28,7 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # frontend dev server
+    allow_origins=["https://imgrtfl.com", "imgrtfl.vercel.app"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
