@@ -16,10 +16,12 @@ import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const JournalPage = () => {
   const { isSignedIn } = useAuth();
   const { getToken } = useAuth();
+  const navigate = useNavigate();
 
   const { user } = useUser();
   const toast = useToast();
@@ -40,10 +42,23 @@ const JournalPage = () => {
   });
 
   useEffect(() => {
+    const verifyUser = async () => {
+      const token = await getToken();
+      const res = await axios.get(`${backendUrl}/api/users/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.data?.exists) {
+        navigate("/onboarding");
+      }
+    };
+    verifyUser();
+  }, []);
+
+  useEffect(() => {
     const fetchEntries = async () => {
       try {
         const token = await getToken();
-        const res = await axios.get(`${backendUrl}/api/entries`, {
+        const res = await axios.get(`${backendUrl}/api/entries/`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -56,28 +71,6 @@ const JournalPage = () => {
     };
   
     fetchEntries();
-  }, []);
-
-  useEffect(() => {
-    const getReflection = async () => {
-      try {
-        const token = await getToken();
-        const res = await axios.post(
-          `${backendUrl}/api/send-reminder/`, 
-          {}, // empty body
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        console.log(res.data);
-      } catch (err) {
-        console.log("Failed to get reflections", err);
-      }
-    };
-  
-    getReflection();
   }, []);
 
   const handleSubmit = async(values: { content: string }, actions: any) => {
