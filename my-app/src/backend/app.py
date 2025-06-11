@@ -1,8 +1,8 @@
-from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
+from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, Request
 from sqlalchemy.orm import Session
 from datetime import datetime
 import random
-import os
+import os, secrets
 from pydantic import BaseModel
 from typing import List, Optional
 from twilio.rest import Client
@@ -316,14 +316,25 @@ def send_reminder(db: Session = Depends(get_db), user=Depends(require_user)):
         raise HTTPException(status_code=500, detail="Failed to send SMS reminder")
 
 @app.post("/api/send-reminder/")
-def trigger_reminder(background_tasks: BackgroundTasks, db: Session = Depends(get_db), user=Depends(require_user)):
-    clerk_user_id = user["sub"]
-    user = db.query(models.User).filter(models.User.clerk_user_id == clerk_user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    background_tasks.add_task(send_reminder, db=db, user=user)
-    return {"message": "Reminder scheduled"}
+def trigger_reminders(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+):
+    auth_header = request.headers.get("Authorization")
+    if not auth_header:
+        raise HTTPException(status_code=401, detail="Missing Authorization header")
+
+    if not secrets.compare_digest(auth_header, f"Bearer {os.getenv('CRON_SECRET')}"):
+        raise HTTPException(status_code=403, detail="Unauthorized")
+
+    users = db.query(models.User).filter(models.User.phone_number.isnot(None)).all()
+
+    for user in users:
+        background_tasks.add_task(send_reminder, db=db, user=user)
+
+    return {"message": f"Scheduled reminders for {len(users)} users."}
+
 
 @app.post("/api/reflect", response_model=ReflectionResponse)
 def generate_reflection(user=Depends(require_user), db: Session = Depends(get_db)): 

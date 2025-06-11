@@ -19,12 +19,11 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 const JournalPage = () => {
-  const { isSignedIn } = useAuth();
-  const { getToken } = useAuth();
   const navigate = useNavigate();
 
   const { user } = useUser();
   const toast = useToast();
+  const { isLoaded, isSignedIn, getToken } = useAuth();
 
   const [entries, setEntries] = useState<Array<{
     content: string;
@@ -44,7 +43,7 @@ const JournalPage = () => {
   useEffect(() => {
     const verifyUser = async () => {
       const token = await getToken();
-      const res = await axios.get(`${backendUrl}/api/users/me`, {
+      const res = await axios.get(`${backendUrl}/api/user/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.data?.exists) {
@@ -55,6 +54,7 @@ const JournalPage = () => {
   }, []);
 
   useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
     const fetchEntries = async () => {
       try {
         const token = await getToken();
@@ -71,7 +71,7 @@ const JournalPage = () => {
     };
   
     fetchEntries();
-  }, []);
+  }, [isLoaded, isSignedIn]);
 
   const handleSubmit = async(values: { content: string }, actions: any) => {
     try {

@@ -79,19 +79,20 @@ export const App = () => {
           </MotionText>
 
           <VStack spacing={4} pt={6}>
-            <MotionButton
-              as={Link}
-              to="/signup"
-              colorScheme="orange"
-              size="lg"
-              borderRadius="full"
-              fontWeight="bold"
-              px={10}
-              variants={fadeIn}
-              whileHover={{ scale: 1.05 }}
-            >
-              Start your gratitude journey
-            </MotionButton>
+          <MotionButton
+            as={Link}
+            to="/signup"
+            colorScheme="orange"
+            size="lg"
+            borderRadius="full"
+            fontWeight="bold"
+            px={{ base: 6, md: 10 }}
+            maxW={{ base: "80%", md: "auto" }}
+            variants={fadeIn}
+            whileHover={{ scale: 1.05 }}
+          >
+            Start your gratitude journey
+          </MotionButton>
             <MotionButton
               as={Link}
               to="/login"
