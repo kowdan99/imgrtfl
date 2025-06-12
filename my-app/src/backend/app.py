@@ -14,6 +14,7 @@ from fastapi.responses import Response
 import openai
 import json
 import re
+import base64
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -322,12 +323,11 @@ def trigger_reminders(
     db: Session = Depends(get_db)
 ):
     auth_header = request.headers.get("Authorization")
-    if not auth_header:
-        raise HTTPException(status_code=401, detail="Missing Authorization header")
+    expected = base64.b64decode(os.getenv("CRON_SECRET")).decode()
 
-    if not secrets.compare_digest(auth_header, f"Bearer {os.getenv('CRON_SECRET')}"):
+    if auth_header != f"Bearer {expected}":
         raise HTTPException(status_code=403, detail="Unauthorized")
-
+    
     users = db.query(models.User).filter(models.User.phone_number.isnot(None)).all()
 
     for user in users:
