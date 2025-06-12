@@ -146,7 +146,7 @@ const JournalPage = () => {
               fontWeight="extrabold"
               letterSpacing="tight"
             >
-              Hey {user?.firstName || "friend"} 🌟
+              {isLoaded && user?.firstName ? `Hey ${user.firstName} 🌟` : "Hey friend 🌟"}
             </Heading>
 
             <Formik
