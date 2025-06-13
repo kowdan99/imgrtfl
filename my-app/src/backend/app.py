@@ -325,7 +325,7 @@ def trigger_reminders(
     auth_header = request.headers.get("Authorization")
     expected = base64.b64decode(os.getenv("CRON_SECRET")).decode()
     print(f"🔐 Received auth: {auth_header}")
-
+    print(f"🔐 Expected Authorization header: {expected}")
 
     if auth_header != f"Bearer {expected}":
         raise HTTPException(status_code=403, detail="Unauthorized")
