@@ -75,7 +75,7 @@ export const App = () => {
             variants={fadeIn}
             transition={{ delay: 0.2 }}
           >
-            Journal what you're grateful for, and we'll randomly send those entries back to you as gentle reminders. Cultivate your gratitude mindset with a smile ✨
+            Journal what you're grateful for, and we'll randomly send those entries back to you as gentle reminders. Cultivate your gratitude mindset with a smile.
           </MotionText>
 
           <VStack spacing={4} pt={6}>
@@ -86,12 +86,17 @@ export const App = () => {
             size="lg"
             borderRadius="full"
             fontWeight="bold"
-            px={{ base: 6, md: 10 }}
-            maxW={{ base: "80%", md: "auto" }}
+            w="full"
+            maxW="md"
+            whiteSpace="normal"
+            textAlign="center"
+            px={6}
+            py={6}
+            lineHeight="short"
             variants={fadeIn}
             whileHover={{ scale: 1.05 }}
           >
-            Start your gratitude journey
+            Start here
           </MotionButton>
             <MotionButton
               as={Link}
