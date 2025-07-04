@@ -4,6 +4,7 @@ import {
   Button,
   Text,
   VStack,
+  Heading,
   useColorModeValue,
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
@@ -11,6 +12,7 @@ import { Link } from "react-router-dom";
 
 const MotionBox = motion(Box);
 const MotionText = motion(Text);
+const MotionHeading = motion(Heading);
 const MotionButton = motion(Button);
 
 const fadeIn = {
@@ -32,86 +34,68 @@ export const App = () => {
       display="flex"
       alignItems="center"
       justifyContent="center"
-      px={6}
-      py={{ base: 12, sm: 16, md: 20 }}
+      px={{ base: 6, md: 8 }}
+      py={{ base: 16, md: 24 }}
     >
       <MotionBox
         initial="hidden"
         animate="show"
         variants={fadeIn}
-        bg="rgba(255, 255, 255, 0.25)"
-        backdropFilter="blur(10px)"
-        borderRadius="2xl"
-        p={{ base: 8, sm: 10, md: 16 }}
-        maxW={{ base: "90%", sm: "85%", md: "3xl" }}
-        w="full"
-        border="1px solid rgba(255, 255, 255, 0.2)"
         textAlign="center"
+        maxW="3xl"
+        w="full"
       >
         <VStack spacing={8}>
-          <MotionText
+          <MotionHeading
             fontSize={{ base: "3xl", sm: "4xl", md: "5xl" }}
-            fontWeight="extrabold"
+            fontWeight="semibold"
             color="blackAlpha.800"
             variants={fadeIn}
           >
-            i'm grtfl <Text as="span">✨</Text>
-          </MotionText>
+            Cultivate Gratitude. <br /> Receive Reflections.
+          </MotionHeading>
 
           <MotionText
-            fontSize={{ base: "lg", sm: "xl", md: "2xl" }}
-            fontWeight="medium"
+            fontSize={{ base: "md", sm: "lg" }}
             color="blackAlpha.700"
+            maxW="lg"
             variants={fadeIn}
             transition={{ delay: 0.1 }}
           >
-            A step closer to gratitude
+            imgrtfl sends your past moments of gratitude back to you via SMS —
+            enhanced with LLM-powered reflection.
           </MotionText>
-
-          <MotionText
-            fontSize={{ base: "sm", sm: "md", md: "md" }}
-            maxW="lg"
-            color="blackAlpha.700"
-            variants={fadeIn}
-            transition={{ delay: 0.2 }}
-          >
-            Journal what you're grateful for, and we'll randomly send those entries back to you as gentle reminders. Cultivate your gratitude mindset with a smile.
-          </MotionText>
-
-          <VStack spacing={4} pt={6}>
+          
           <MotionButton
             as={Link}
             to="/signup"
-            colorScheme="orange"
             size="lg"
+            bg="pink.200"
+            _hover={{ bg: "pink.300" }}
+            color="black"
+            fontWeight="semibold"
             borderRadius="full"
-            fontWeight="bold"
-            w="full"
-            maxW="md"
-            whiteSpace="normal"
-            textAlign="center"
-            px={6}
+            px={8}
             py={6}
-            lineHeight="short"
             variants={fadeIn}
             whileHover={{ scale: 1.05 }}
           >
-            Start here
+            Start journaling
           </MotionButton>
-            <MotionButton
-              as={Link}
-              to="/login"
-              variant="ghost"
-              size="lg"
-              color="blackAlpha.800"
-              fontWeight="medium"
-              variants={fadeIn}
-              transition={{ delay: 0.3 }}
-              whileHover={{ scale: 1.05 }}
-            >
-              Log In
-            </MotionButton>
-          </VStack>
+
+          <MotionButton
+            as={Link}
+            to="/login"
+            variant="ghost"
+            size="lg"
+            color="blackAlpha.800"
+            fontWeight="medium"
+            variants={fadeIn}
+            transition={{ delay: 0.2 }}
+            whileHover={{ scale: 1.05 }}
+          >
+            Log In
+          </MotionButton>
         </VStack>
       </MotionBox>
     </Box>
