@@ -4,7 +4,7 @@ from datetime import datetime
 import random
 import os, secrets
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Literal, Dict, Any
 from twilio.rest import Client
 import models
 from database import SessionLocal, engine
@@ -15,6 +15,10 @@ import openai
 import json
 import re
 import base64
+from selector.router import decide
+from datetime import datetime, timezone
+
+
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -52,6 +56,9 @@ def get_db():
         yield db
     finally:
         db.close()
+
+DecisionAction = Literal["expand", "nudge", "resurface"]
+ActionStatus   = Literal["suggested", "scheduled", "executed", "cancelled"]
 
 # Pydantic models for request/response
 class GratitudeEntryCreate(BaseModel):
@@ -94,10 +101,55 @@ class ReflectionResponse(BaseModel):
     created_at: datetime
     embedding: Optional[List[str]] = None
 
+class Signals(BaseModel):
+    len_chars: int
+    len_words: int
+    ends_with_punct: bool
+    has_contact: bool
+    who_display: Optional[str] = None
+    has_gratitude: bool
+    has_social: bool
+    has_reflection: bool
+    n_capitalized: int
+    hour: int
+
     class Config:
         orm_mode = True
 
+class DecisionTrace(BaseModel):
+    id: int
+    user_id: int
+    entry_id: int
+    top_action: DecisionAction
+    candidates_json: Dict[DecisionAction, float]
+    signals_json: Signals
+    reason: str
+    confidence: float
+    latency_ms: int
+    created_at: datetime
+
+    class Config:
+        orm_mode = True
+
+
+class Action(BaseModel):
+    id: int
+    user_id: int
+    entry_id: int
+    trace_id: Optional[int] = None
+    type: DecisionAction
+    status: ActionStatus
+    params_json: Dict[str, Any] | None = None
+    scheduled_for: Optional[datetime] = None
+    executed_at: Optional[datetime] = None
+    created_at: datetime
+
+    class Config:
+        orm_mode = True
 # API Routes
+
+def utcnow():
+    return datetime.now(timezone.utc)
 
 @app.options("/api/users/")
 def preflight_handler():
@@ -139,21 +191,27 @@ def create_user(
     print("Created DB user with Clerk ID:", clerk_user_id)
     return db_user
 
-@app.post("/api/entries/", response_model=GratitudeEntryResponse)
-async def create_entry(entry: GratitudeEntryCreate, db: Session = Depends(get_db), user=Depends(require_user)):
-    # Check if user exists
+async def create_entry(
+    entry: GratitudeEntryCreate,
+    db: Session = Depends(get_db),
+    user=Depends(require_user),
+):
+    # 1) Resolve current user
     clerk_user_id = user["sub"]
-    # print("🔐 Clerk ID from JWT:", clerk_user_id)
     db_user = db.query(models.User).filter(models.User.clerk_user_id == clerk_user_id).first()
-
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
 
+    # 2) Create the entry row (no commit yet)
     db_entry = models.GratitudeEntry(
         user_id=db_user.id,
-        content=entry.content,
+        content=entry.content.strip(),
+        created_at=utcnow(),  # if you're doing app-side stamping
     )
+    db.add(db_entry)
+    db.flush()  # get db_entry.id without committing
 
+    # 3) (Optional) LLM enrichment you already had
     if db_user.use_llm_reminders:
         try:
             reminder, reasoning, tags, mood = await generate_llm_reminder(entry.content)
@@ -164,10 +222,64 @@ async def create_entry(entry: GratitudeEntryCreate, db: Session = Depends(get_db
         except Exception as e:
             print("LLM generation failed:", e)
 
-    db.add(db_entry)
+    # 4) Run the decision router
+    t0 = perf_counter()
+    contact_names: list[str] = []  # plug real names later
+    allow_nudge = True             # or derive from prefs
+    decision = decide(
+        text=db_entry.content,                 # <<< use the string
+        contact_names=contact_names,
+        allow_nudge=allow_nudge,
+    )
+    latency_ms = int((perf_counter() - t0) * 1000)
+
+    # 5) Persist trace
+    trace = DecisionTrace(
+        user_id=db_user.id,                    # <<< use db_user.id
+        entry_id=db_entry.id,                  # <<< use db_entry.id
+        top_action=DecisionAction(decision["action"]),
+        candidates_json=decision["candidates"],
+        signals_json=decision["signals"],
+        reason=decision["reason"],
+        confidence=decision["confidence"],
+        latency_ms=latency_ms,
+        created_at=utcnow(),                   # if app-side stamping
+    )
+    db.add(trace)
+    db.flush()  # get trace.id
+
+    # 6) Persist suggested action
+    act = Action(
+        user_id=db_user.id,
+        entry_id=db_entry.id,
+        trace_id=trace.id,
+        type=DecisionAction(decision["action"]),
+        status=ActionStatus.suggested,
+        params_json=decision["params"],
+        created_at=utcnow(),                   # if app-side stamping
+    )
+    db.add(act)
+
+    # 7) Commit once
     db.commit()
     db.refresh(db_entry)
-    return db_entry
+    db.refresh(act)
+    db.refresh(trace)
+
+    # 8) Shape the response
+    return {
+        "entry_id": db_entry.id,
+        "suggested": {
+            "id": act.id,
+            "type": decision["action"],
+            "confidence": decision["confidence"],
+            "reason": decision["reason"],
+            "params": decision["params"],
+            "guardrails": decision["guardrails"],
+            "candidates": decision["candidates"],
+        },
+        "trace_id": trace.id,
+    }
 
 @app.get("/api/user/me")
 def get_my_user(db: Session = Depends(get_db), user=Depends(require_user)):
