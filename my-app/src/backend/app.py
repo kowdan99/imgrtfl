@@ -209,77 +209,61 @@ async def create_entry(
         created_at=utcnow(),  # if you're doing app-side stamping
     )
     db.add(db_entry)
-    db.flush()  # get db_entry.id without committing
+    # db.flush()  # get db_entry.id without committing
 
-    # 3) (Optional) LLM enrichment you already had
-    if db_user.use_llm_reminders:
-        try:
-            reminder, reasoning, tags, mood = await generate_llm_reminder(entry.content)
-            db_entry.llm_reminder = reminder
-            db_entry.llm_reasoning_trace = reasoning
-            db_entry.tags = tags
-            db_entry.mood = mood
-        except Exception as e:
-            print("LLM generation failed:", e)
+    # # 3) (Optional) LLM enrichment you already had
+    # if db_user.use_llm_reminders:
+    #     try:
+    #         reminder, reasoning, tags, mood = await generate_llm_reminder(entry.content)
+    #         db_entry.llm_reminder = reminder
+    #         db_entry.llm_reasoning_trace = reasoning
+    #         db_entry.tags = tags
+    #         db_entry.mood = mood
+    #     except Exception as e:
+    #         print("LLM generation failed:", e)
 
-    # 4) Run the decision router
-    t0 = perf_counter()
-    contact_names: list[str] = []  # plug real names later
-    allow_nudge = True             # or derive from prefs
-    decision = decide(
-        text=db_entry.content,                 # <<< use the string
-        contact_names=contact_names,
-        allow_nudge=allow_nudge,
-    )
-    latency_ms = int((perf_counter() - t0) * 1000)
+    # # 4) Run the decision router
+    # t0 = perf_counter()
+    # contact_names: list[str] = []  # plug real names later
+    # allow_nudge = True             # or derive from prefs
+    # decision = decide(
+    #     text=db_entry.content,                 # <<< use the string
+    #     contact_names=contact_names,
+    #     allow_nudge=allow_nudge,
+    # )
+    # latency_ms = int((perf_counter() - t0) * 1000)
 
-    # 5) Persist trace
-    trace = DecisionTrace(
-        user_id=db_user.id,                    # <<< use db_user.id
-        entry_id=db_entry.id,                  # <<< use db_entry.id
-        top_action=DecisionAction(decision["action"]),
-        candidates_json=decision["candidates"],
-        signals_json=decision["signals"],
-        reason=decision["reason"],
-        confidence=decision["confidence"],
-        latency_ms=latency_ms,
-        created_at=utcnow(),                   # if app-side stamping
-    )
-    db.add(trace)
-    db.flush()  # get trace.id
+    # # 5) Persist trace
+    # trace = DecisionTrace(
+    #     user_id=db_user.id,                    # <<< use db_user.id
+    #     entry_id=db_entry.id,                  # <<< use db_entry.id
+    #     top_action=DecisionAction(decision["action"]),
+    #     candidates_json=decision["candidates"],
+    #     signals_json=decision["signals"],
+    #     reason=decision["reason"],
+    #     confidence=decision["confidence"],
+    #     latency_ms=latency_ms,
+    #     created_at=utcnow(),                   # if app-side stamping
+    # )
+    # db.add(trace)
+    # db.flush()  # get trace.id
 
-    # 6) Persist suggested action
-    act = Action(
-        user_id=db_user.id,
-        entry_id=db_entry.id,
-        trace_id=trace.id,
-        type=DecisionAction(decision["action"]),
-        status=ActionStatus.suggested,
-        params_json=decision["params"],
-        created_at=utcnow(),                   # if app-side stamping
-    )
-    db.add(act)
+    # # 6) Persist suggested action
+    # act = Action(
+    #     user_id=db_user.id,
+    #     entry_id=db_entry.id,
+    #     trace_id=trace.id,
+    #     type=DecisionAction(decision["action"]),
+    #     status=ActionStatus.suggested,
+    #     params_json=decision["params"],
+    #     created_at=utcnow(),                   # if app-side stamping
+    # )
+    # db.add(act)
 
     # 7) Commit once
     db.commit()
     db.refresh(db_entry)
-    db.refresh(act)
-    db.refresh(trace)
 
-    # 8) Shape the response
-    return {
-        "entry_id": db_entry.id,
-        "suggested": {
-            "id": act.id,
-            "type": decision["action"],
-            "confidence": decision["confidence"],
-            "reason": decision["reason"],
-            "params": decision["params"],
-            "guardrails": decision["guardrails"],
-            "candidates": decision["candidates"],
-        },
-        "trace_id": trace.id,
-    }
 
 @app.get("/api/user/me")
 def get_my_user(db: Session = Depends(get_db), user=Depends(require_user)):
