@@ -191,6 +191,7 @@ def create_user(
     print("Created DB user with Clerk ID:", clerk_user_id)
     return db_user
 
+@app.post("/api/entries/", response_model=GratitudeEntryResponse)
 async def create_entry(
     entry: GratitudeEntryCreate,
     db: Session = Depends(get_db),
@@ -263,6 +264,7 @@ async def create_entry(
     # 7) Commit once
     db.commit()
     db.refresh(db_entry)
+    return db_entry
 
 
 @app.get("/api/user/me")
