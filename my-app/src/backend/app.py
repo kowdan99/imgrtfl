@@ -210,18 +210,18 @@ async def create_entry(
         created_at=utcnow(),  # if you're doing app-side stamping
     )
     db.add(db_entry)
-    # db.flush()  # get db_entry.id without committing
+    db.flush()  # get db_entry.id without committing
 
-    # # 3) (Optional) LLM enrichment you already had
-    # if db_user.use_llm_reminders:
-    #     try:
-    #         reminder, reasoning, tags, mood = await generate_llm_reminder(entry.content)
-    #         db_entry.llm_reminder = reminder
-    #         db_entry.llm_reasoning_trace = reasoning
-    #         db_entry.tags = tags
-    #         db_entry.mood = mood
-    #     except Exception as e:
-    #         print("LLM generation failed:", e)
+    # 3) (Optional) LLM enrichment you already had
+    if db_user.use_llm_reminders:
+        try:
+            reminder, reasoning, tags, mood = await generate_llm_reminder(entry.content)
+            db_entry.llm_reminder = reminder
+            db_entry.llm_reasoning_trace = reasoning
+            db_entry.tags = tags
+            db_entry.mood = mood
+        except Exception as e:
+            print("LLM generation failed:", e)
 
     # # 4) Run the decision router
     # t0 = perf_counter()
