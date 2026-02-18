@@ -11,7 +11,7 @@ from database import SessionLocal, engine
 from auth import require_user
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
-import openai
+from openai import OpenAI
 import json
 import re
 import base64
@@ -21,6 +21,7 @@ from datetime import datetime, timezone
 
 
 from dotenv import load_dotenv
+client = OpenAI()
 load_dotenv()
 
 # Create database tables
@@ -348,7 +349,7 @@ async def generate_llm_reminder(entry):
     }}
     """
 
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-4",
         messages=[{"role": "user", "content": prompt}],
         max_tokens=300,
