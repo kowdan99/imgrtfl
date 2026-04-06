@@ -36,7 +36,8 @@ app.add_middleware(
     allow_origins=[
         "https://imgrtfl.com",
         "https://www.imgrtfl.com",
-        "https://imgrtfl.vercel.app"
+        "https://imgrtfl.vercel.app",
+        "http://localhost:3000",
     ],
     allow_credentials=True,
     allow_methods=["*"],
