@@ -21,16 +21,15 @@ from datetime import datetime, timezone
 
 
 from dotenv import load_dotenv
-client = OpenAI()
 load_dotenv()
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Create database tables
 models.Base.metadata.create_all(bind=engine)
 
 # Initialize FastAPI app
 app = FastAPI()
-# client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-openai.api_key = os.getenv("OPENAI_API_KEY")
 
 app.add_middleware(
     CORSMiddleware,
@@ -354,7 +353,6 @@ async def generate_llm_reminder(entry):
         messages=[{"role": "user", "content": prompt}],
         max_tokens=300,
         temperature=0.7,
-        stop=["}"]
     )
 
     # print(response)
