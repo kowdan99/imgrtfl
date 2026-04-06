@@ -18,11 +18,6 @@ import * as Yup from "yup";
 import { useUser, useAuth } from "@clerk/clerk-react";
 import axios from "axios";
 
-interface FormValues {
-  phone: string;
-  useLLM: string; // "yes" or "no"
-}
-
 const OnboardingForm = ({ onSubmit }: { onSubmit: (data: any) => void }) => {
   const { user } = useUser();
   const { getToken } = useAuth();

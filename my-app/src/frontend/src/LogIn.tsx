@@ -1,19 +1,7 @@
 // pages/Login.tsx
 import React from 'react'
 import { SignIn } from '@clerk/clerk-react'
-import {
-    ChakraProvider,
-    Box,
-    Button,
-    Heading,
-    Text,
-    VStack,
-    Grid,
-    Input
-    // theme,
-} from "@chakra-ui/react"
-import theme from './theme'
-export {}
+import { Box, Text, VStack, Grid } from "@chakra-ui/react"
 const LoginPage = () => {
   return (
 

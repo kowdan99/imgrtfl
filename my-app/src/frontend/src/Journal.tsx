@@ -53,6 +53,7 @@ const JournalPage = () => {
       }
     };
     verifyUser();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -75,6 +76,7 @@ const JournalPage = () => {
     };
   
     fetchEntries();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoaded, isSignedIn]);
 
   const handleSubmit = async(values: { content: string }, actions: any) => {

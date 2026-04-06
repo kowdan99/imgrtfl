@@ -1,8 +1,6 @@
-import { useUser } from "@clerk/clerk-react";
 import OnboardingForm from "./OnboardingForm";
 
 const OnboardingPage = () => {
-  const { user } = useUser();
 
   const handleOnboardingSubmit = async () => {
     // 👇 Post to your backend API
