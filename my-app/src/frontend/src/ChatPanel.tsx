@@ -67,6 +67,7 @@ const ChatPanel = ({ getToken, backendUrl, trigger, onTriggerHandled }: ChatPane
     };
 
     runTrigger();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trigger]);
 
   const sendMessage = async () => {
