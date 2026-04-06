@@ -484,6 +484,78 @@ def generate_reflection_summary(entries: list[str]) -> str:
         max_tokens=200
     )
     return response.choices[0].message.content.strip()
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+class ChatRequest(BaseModel):
+    messages: List[ChatMessage] = []
+    trigger: Optional[str] = None  # "load" or "new_entry"
+    new_entry: Optional[str] = None
+
+@app.post("/api/chat/")
+async def chat(
+    request: ChatRequest,
+    db: Session = Depends(get_db),
+    user=Depends(require_user)
+):
+    clerk_user_id = user["sub"]
+    db_user = db.query(models.User).filter(models.User.clerk_user_id == clerk_user_id).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    entries = (
+        db.query(models.GratitudeEntry)
+        .filter(models.GratitudeEntry.user_id == db_user.id)
+        .order_by(models.GratitudeEntry.created_at.asc())
+        .all()
+    )
+
+    if not entries:
+        return {"message": "Write your first entry and I'll start noticing patterns."}
+
+    entries_text = "\n".join([
+        f"[{e.created_at.strftime('%B %d, %Y')}]: {e.content}"
+        for e in entries
+    ])
+
+    system_prompt = f"""You are a perceptive gratitude journaling companion for {db_user.name}.
+
+Here are all their past gratitude entries (oldest first):
+{entries_text}
+
+Guidelines:
+- Surface specific, non-obvious patterns or connections from their actual entries
+- Reference specific entries and dates when relevant
+- Keep responses short: 2-3 sentences max, then one thoughtful question
+- Never give generic wellness advice
+- Be warm but direct — like a smart friend, not a therapist
+- Avoid hollow words like "fascinating", "wonderful", "beautiful", "I notice"
+"""
+
+    if request.trigger == "load":
+        messages_to_send = [{
+            "role": "user",
+            "content": "Open with one specific insight from my entries — something I might have missed or overlooked. Then ask me one question about it."
+        }]
+    elif request.trigger == "new_entry" and request.new_entry:
+        messages_to_send = [{
+            "role": "user",
+            "content": f"I just wrote: \"{request.new_entry}\". Connect this to something specific from my past entries and ask me one follow-up question."
+        }]
+    else:
+        messages_to_send = [{"role": m.role, "content": m.content} for m in request.messages]
+
+    response = client.chat.completions.create(
+        model="gpt-4",
+        messages=[{"role": "system", "content": system_prompt}] + messages_to_send,
+        max_tokens=200,
+        temperature=0.8,
+    )
+
+    return {"message": response.choices[0].message.content.strip()}
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

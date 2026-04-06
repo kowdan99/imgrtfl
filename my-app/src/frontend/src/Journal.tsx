@@ -17,6 +17,7 @@ import * as Yup from "yup";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import ChatPanel from "./ChatPanel";
 
 const JournalPage = () => {
   const navigate = useNavigate();
@@ -33,7 +34,8 @@ const JournalPage = () => {
     tags?:[string];
     moods?:string
   }>>([]);
-  const backendUrl = process.env.REACT_APP_BACKEND_URL 
+  const [chatTrigger, setChatTrigger] = useState<{ type: "load" | "new_entry"; entryContent?: string } | null>(null);
+  const backendUrl = process.env.REACT_APP_BACKEND_URL
 
 
   const validationSchema = Yup.object({
@@ -63,8 +65,10 @@ const JournalPage = () => {
             Authorization: `Bearer ${token}`,
           },
         });
-        // You might want to reverse to show most recent first
         setEntries(res.data);
+        if (res.data.length > 0) {
+          setChatTrigger({ type: "load" });
+        }
       } catch (err) {
         console.error("Failed to fetch entries:", err);
       }
@@ -103,6 +107,7 @@ const JournalPage = () => {
         mood:response.data.mood
       };
       setEntries((prev) => [newEntry, ...prev]);
+      setChatTrigger({ type: "new_entry", entryContent: values.content });
       actions.resetForm();
   
     } catch (err) {
@@ -222,6 +227,13 @@ const JournalPage = () => {
                 ))
               )}
             </VStack>
+
+            <ChatPanel
+              getToken={getToken}
+              backendUrl={backendUrl}
+              trigger={chatTrigger}
+              onTriggerHandled={() => setChatTrigger(null)}
+            />
           </VStack>
         </Box>
       ) : (
